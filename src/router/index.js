@@ -5,51 +5,71 @@ import Login from '../views/Login.vue'
 import SignUp from '../views/SignUp.vue'
 import Profile from "../views/Profile.vue";
 import Detail from "../views/Detail.vue";
+import store from "../store/index";
 
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path:'/',
-    name:'Login',
-    component:Login
+    path: "/",
+    name: "login",
+    component: Login,
   },
   {
-    path:'/signup',
-    name:'SignUp',
-    component:SignUp
+    path: "/signup",
+    name: "signup",
+    component: SignUp,
   },
   {
-    path: '/home',
-    name: 'Home',
-    component: Home
-  },
-  {
-    path: "/profile",
-    name: "profile",
-    component: Profile,
+    path: "/home",
+    name: "Home",
+    component: Home,
+    meta: {
+      requiresAuth: true, //コンポーネントの表示には認証が必要と定義する
+    },
   },
   {
     path: "/detail/:id",
     name: "detail",
     component: Detail,
+    meta: {
+      requiresAuth: true, //コンポーネントの表示には認証が必要と定義する
+    },
     props: true,
   },
   {
-    path: '/about',
-    name: 'About',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  }
-]
+    path: "/profile",
+    name: "profile",
+    component: Profile,
+    meta: {
+      requiresAuth: true, //コンポーネントの表示には認証が必要と定義する
+    },
+  },
+];
 
 const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
-  routes
-})
+  routes,
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  if (
+    to.matched.some((record) => record.meta.requiresAuth) &&
+    !store.state.auth
+  ) {
+    // 認証してないので"/"へ
+    next({
+      path: "/",
+      query: {
+        redirect: to.fullPath,
+      },
+    });
+     // 認証状態はそのまま遷移
+  } else {
+    next();
+  }
+});
+
+export default router;
